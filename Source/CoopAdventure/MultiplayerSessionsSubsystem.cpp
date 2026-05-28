@@ -2,12 +2,19 @@
 
 
 #include "MultiplayerSessionsSubsystem.h"
+#include "Online/OnlineSessionNames.h"
 #include "OnlineSubsystem.h"
-#include "OnlineSessionSettings.h"
+
 
 
 
 #define EasyPrint(X) GEngine->AddOnScreenDebugMessage(-1,15,FColor::Green,X)
+
+UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem()
+{
+	CreateServerAfterDestroy =false;
+	DestroyServerName="";
+}
 
 void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -21,7 +28,8 @@ void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase& Collect
 		if (SessionInterface.IsValid())
 		{
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this,&UMultiplayerSessionsSubsystem::OnCreatSessionComplete);
-			
+			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this,&UMultiplayerSessionsSubsystem::OnDestroySessionComplete);
+			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this,&UMultiplayerSessionsSubsystem::FindSessionComplete);
 		}
 	}
 		
@@ -29,12 +37,26 @@ void UMultiplayerSessionsSubsystem::Initialize(FSubsystemCollectionBase& Collect
 
 void UMultiplayerSessionsSubsystem::CreateSession(FString ServerName)
 {
-	EasyPrint("Create session Called");
+	//EasyPrint("Create session Called");
 	
 	//Checking Servername Should not be Empty
 	if (ServerName.IsEmpty())
 	{
-		EasyPrint("server name is empty");
+		//EasyPrint("server name is empty");
+		return;
+	}
+
+	
+
+	//Give Session A Name 
+	FName MySessionName = FName("Co-op Advencher Session");
+	FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(MySessionName);
+	if (ExistingSession)
+	{
+		//EasyPrint("Exsiting session Ask to Destroy");
+		CreateServerAfterDestroy = true;
+		DestroyServerName=ServerName;
+		SessionInterface->DestroySession(MySessionName);
 		return;
 	}
 
@@ -57,15 +79,8 @@ void UMultiplayerSessionsSubsystem::CreateSession(FString ServerName)
 	}
 	
 	SessionSettings.bIsLANMatch = IsLan;
-
-
 	
-
-	//Give Session A Name 
-	FName SessionName = FName("Co-op Advencher Session");
-
-	
-	SessionInterface->CreateSession(0,SessionName,SessionSettings);
+	SessionInterface->CreateSession(0,MySessionName,SessionSettings);
 	
 	
 
@@ -78,11 +93,68 @@ void UMultiplayerSessionsSubsystem::CreateSession(FString ServerName)
 
 void UMultiplayerSessionsSubsystem::FindSession(FString ServerName)
 {
-	EasyPrint("Find session Called");
+	if(ServerName.IsEmpty())
+	{
+		return;
+		EasyPrint("Servername Emty");
+	}
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	bool IsLan = false;
+	if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+	{
+		IsLan = true;
+	}
+	SessionSearch->bIsLanQuery = IsLan;
+	SessionSearch-> MaxSearchResults = 9999;
+	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	SessionInterface->FindSessions(0,SessionSearch.ToSharedRef());
+
+
+
+
+	
 }
 
 void UMultiplayerSessionsSubsystem::OnCreatSessionComplete(FName SessionName, bool WasSucssessFull)
 {
-	EasyPrint(FString::Printf(TEXT("ON session Creation completed: %d"),WasSucssessFull));
+	//EasyPrint(FString::Printf(TEXT("ON session Creation completed: %d"),WasSucssessFull));
+	if (WasSucssessFull)
+	{
+		GetWorld()->ServerTravel("/Game/MyStuff/MainManu/Lvl_ThirdPerson?listen");
+		
+	}
+}
+
+void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool WasSucssessFull)
+{
+	FString msg = FString::Printf(TEXT("OnDestroySession completed: Session Name:%s,SucessFull: %d"),*SessionName.ToString() ,WasSucssessFull);
+	EasyPrint(msg);
+	if (CreateServerAfterDestroy)
+	{
+		CreateServerAfterDestroy = false;
+		CreateSession(DestroyServerName);
+	}
+	
+}
+
+void UMultiplayerSessionsSubsystem::FindSessionComplete(bool WasSucssessFull)
+{
+	FString msg = FString::Printf(TEXT("OnDestroySession completed %d"),WasSucssessFull);
+	EasyPrint(msg);
+
+	if (!WasSucssessFull)
+	{
+		return;
+	}
+	TArray<FOnlineSessionSearchResult> Results =  SessionSearch->SearchResults;
+	if (Results.Num() > 0)
+	{
+		FString massage = FString::Printf(TEXT("Session Found %d"),Results.Num());
+		EasyPrint(massage);	
+	}
+	else
+	{
+		EasyPrint("Zero Session Found");
+	}
 }
 
