@@ -16,6 +16,15 @@ class COOPADVENTURE_API UMultiplayerSessionsSubsystem : public UGameInstanceSubs
 	GENERATED_BODY()
 
 public:
+
+
+	//variable
+	IOnlineSessionPtr SessionInterface;
+
+	
+
+
+	
 	//Fuction
 	 void Initialize(FSubsystemCollectionBase& Collection) override;
 	
@@ -24,12 +33,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void FindSession(FString ServerName);
-		
+
+	void OnCreatSessionComplete(FName SessionName,bool WasSucssessFull );
 	
 
 
-	//variable
-	IOnlineSessionPtr SessionInterface;
+	
 
 	
 };
