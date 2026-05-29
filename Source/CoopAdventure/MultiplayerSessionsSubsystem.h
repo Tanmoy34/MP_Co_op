@@ -41,6 +41,9 @@ public:
     UPROPERTY(BlueprintAssignable)
     FServerJoinDelegate ServerJoinDel;
 
+	UPROPERTY(BlueprintReadWrite)
+	FString GameMapPath;
+
 	UMultiplayerSessionsSubsystem();
 	//Fuction
 	 void Initialize(FSubsystemCollectionBase& Collection) override;
