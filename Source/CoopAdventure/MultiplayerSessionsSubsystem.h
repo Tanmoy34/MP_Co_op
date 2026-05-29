@@ -26,7 +26,9 @@ public:
 
 	FString DestroyServerName;
 
-	TSharedPtr<FOnlineSessionSearch>  SessionSearch; 
+	TSharedPtr<FOnlineSessionSearch>  SessionSearch;
+
+	FString ServerNameToFind;
 
 
 	UMultiplayerSessionsSubsystem();
