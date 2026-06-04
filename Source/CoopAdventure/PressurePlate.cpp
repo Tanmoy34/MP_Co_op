@@ -14,6 +14,7 @@ APressurePlate::APressurePlate()
 
 
 	Activated =false;
+	TriggerTag = "TriggerActor";
 
 
 
@@ -58,6 +59,7 @@ void APressurePlate::BeginPlay()
 	TriggerMesh->SetVisibility(false);
 	TriggerMesh->SetCollisionProfileName(TEXT("OverlapAll"));
 	
+	
 }
 
 // Called every frame
@@ -65,5 +67,41 @@ void APressurePlate::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (HasAuthority())
+	{
+		TArray<AActor*> OverlapActors;
+		AActor* TriggerActor = 0;
+        	TriggerMesh->GetOverlappingActors(OverlapActors);
+        	for (int ActorIdx = 0; ActorIdx < OverlapActors.Num(); ActorIdx++)
+        	{
+        		AActor* A = OverlapActors[ActorIdx];
+		        if (A->ActorHasTag(TriggerTag))
+		        {
+			        TriggerActor = A;
+		        	break;
+		        }
+        
+        		//GEngine->AddOnScreenDebugMessage(-1,1,FColor::Red,FString::Printf(TEXT("Name: %s"), *A->GetName()));
+        	}
+		if (TriggerActor)
+		{
+			if (!Activated)
+			{
+				Activated = true;
+				//GEngine->AddOnScreenDebugMessage(-1,1,FColor::Red,TEXT("Activated"));
+				OnActivate.Broadcast();
+			}
+		}
+		else
+		{
+			if (Activated)
+			{
+				Activated = false;
+				//GEngine->AddOnScreenDebugMessage(-1,1,FColor::Red,TEXT("Deactivated"));
+				OnDeactivate.Broadcast();
+			}
+		}
+	}
+	
 }
 

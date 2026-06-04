@@ -7,6 +7,10 @@
 #include "GameFramework/Actor.h"
 #include "PressurePlate.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPressurePlateOnActivate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPressurePlateOnDeactivate);
+
 UCLASS()
 class COOPADVENTURE_API APressurePlate : public AActor
 {
@@ -32,6 +36,14 @@ public:
 	UStaticMeshComponent* Mesh;
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
 	bool Activated;
+
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	FName TriggerTag;
+
+	UPROPERTY(BlueprintAssignable)
+	FPressurePlateOnActivate OnActivate;
+	UPROPERTY(BlueprintAssignable)
+	FPressurePlateOnDeactivate OnDeactivate;
 
 	
 
