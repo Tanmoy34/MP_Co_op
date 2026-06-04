@@ -34,7 +34,7 @@ public:
 	bool ArePointsSet;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float MovePoint;
+	float MoveTime;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	TArray<AActor*> TriggerActors;
@@ -45,7 +45,7 @@ public:
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
 	bool AllTriggerActorsTriggered;
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void Setpoints(FVector Point1,FVector Point2);
 
 	UFUNCTION()

@@ -12,7 +12,7 @@ UTranspoter::UTranspoter()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	SetIsReplicatedByDefault(true);
-	MovePoint = 3.0f;
+	MoveTime = 3.0f;
 	ActivatedTriggerCount = 0;
 
 	ArePointsSet = false;
@@ -25,6 +25,8 @@ UTranspoter::UTranspoter()
 void UTranspoter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
 	for (AActor* TA : TriggerActors)
 	{
 		APressurePlate* PressurePlateActor = Cast<APressurePlate>(TA);
@@ -50,6 +52,20 @@ void UTranspoter::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 		{
 			
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString("All Trigger Actors Triggered!!!"));
+		}
+	}
+	
+	AActor* MyOwner = GetOwner();
+	if (MyOwner && MyOwner->HasAuthority() && ArePointsSet)
+	{
+		FVector CurrentLocation = MyOwner->GetActorLocation();
+		float Speed = FVector::Distance(StartPoint, EndPoint) / MoveTime;
+
+		FVector TargetLocation = AllTriggerActorsTriggered ? EndPoint : StartPoint;
+		if (!CurrentLocation.Equals(TargetLocation))
+		{
+			FVector NewLocation = FMath::VInterpConstantTo(CurrentLocation, TargetLocation, DeltaTime, Speed);
+			MyOwner->SetActorLocation(NewLocation);
 		}
 	}
 	
